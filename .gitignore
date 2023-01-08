@@ -1,0 +1,8 @@
+.secrets.toml
+.venv
+.venv
+*.egg-info
+__pycache__
+**/__pycache__
+**/**/__pycache__
+**/**/**/__pycache__
