@@ -3,9 +3,21 @@ from typing import List
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from sqlmodel import Session, select
+from pamps.auth import AuthenticatedUser
 
 from pamps.db import ActiveSession
-from pamps.models.user import User, UserRequest, UserResponse
+from pamps.models.user import (
+    SocialResponseWithUsers,
+    User,
+    UserRequest,
+    UserResponse,
+    Social,
+    SocialResponse
+)
+from pamps.models.post import (
+    Post,
+    PostResponseWithReplies
+)
 
 router = APIRouter() # /user
 
@@ -37,3 +49,32 @@ async def create_user(*, session: Session = ActiveSession, user: UserRequest):
     session.commit()
     session.refresh(db_user)
     return db_user
+
+
+@router.post("/follow/{id}", response_model=SocialResponse, status_code=201)
+async def add_follow(*, session: Session = ActiveSession, id: int, user: User = AuthenticatedUser):
+    """Follow a User"""
+
+    if user.id == id:
+        raise HTTPException(status_code=400, detail="You can't follow yourself")
+
+    db_social = Social(from_user_id=user.id, to_user_id=id)
+    session.add(db_social)
+    session.commit()
+    session.refresh(db_social)
+    return db_social
+
+@router.get("/{user_id}/followers", response_model=List[SocialResponseWithUsers])
+def get_user_followers(*, session: Session = ActiveSession, user_id: int):
+    """Get Followers of a user"""
+    query = select(Social).where(Social.from_user_id == user_id)
+    return session.exec(query).all()
+
+@router.get("/user/timeline", response_model=List[PostResponseWithReplies])
+def get_user_followers(*, session: Session = ActiveSession, user: User = AuthenticatedUser):
+    """Get Followers of a user"""
+    print(user.id)
+    query = select(Post).where(Post.user_id == Social.to_user_id).where(Social.from_user_id == User.id).where(User.id == user.id)
+    return session.exec(query).all()
+
+#   .user_id = s.to_user_id and s.from_user_id = us.id and us.id = 5

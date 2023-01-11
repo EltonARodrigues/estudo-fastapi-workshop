@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 
 from .config import settings
 from .db import engine
-from .models import User, Post, SQLModel
+from .models import User, Post, Social, SQLModel
 
 main = typer.Typer(name="Pamps CLI")
 
@@ -20,6 +20,7 @@ def shell():
         "session": Session(engine),
         "User": User,
         "Post": Post,
+        "Social": Social,
     }
     typer.echo(f"Auto imports: {list(_vars.keys())}")
     try:
