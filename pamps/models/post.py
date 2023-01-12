@@ -10,6 +10,32 @@ if TYPE_CHECKING:
     from pamps.models.user import User
 
 
+class Like(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    user_id: Optional[int] = Field(foreign_key="user.id")
+    post_id: Optional[int] = Field(foreign_key="post.id")
+
+    user: list["User"] = Relationship(back_populates="likes")
+    post: list["Post"] = Relationship(back_populates="likes")
+
+
+class LikeResponse(BaseModel):
+    user_id: int
+
+
+class LikeCompleteResponde(LikeResponse):
+    post_id: int
+
+
+class LikeRequest(BaseModel):
+    user_id: int
+    post_id: int
+
+    class Config:
+        extra = Extra.allow
+        arbitrary_types_allowed = True
+
 class Post(SQLModel, table=True):
     """Represents the Post Model"""
 
@@ -31,6 +57,8 @@ class Post(SQLModel, table=True):
     # This lists all children to this post
     replies: list["Post"] = Relationship(back_populates="parent")
 
+    likes: list["Like"] = Relationship(back_populates="post")
+
     def __lt__(self, other):
         """This enables post.replies.sort() to sort by date"""
         return self.date < other.date
@@ -44,6 +72,7 @@ class PostResponse(BaseModel):
     date: datetime
     user_id: int
     parent_id: Optional[int]
+    likes: Optional[list[LikeResponse]] = None
 
 
 class PostResponseWithReplies(PostResponse):
@@ -52,6 +81,7 @@ class PostResponseWithReplies(PostResponse):
     class Config:
         orm_mode = True
 
+PostResponseWithReplies.update_forward_refs()
 
 class PostRequest(BaseModel):
     """Serializer for Post request payload"""

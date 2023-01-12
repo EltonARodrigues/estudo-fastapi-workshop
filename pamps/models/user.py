@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from pamps.models.post import Post
+    from pamps.models.post import Like
 
 class User(SQLModel, table=True):
     """Represents the User Model"""
@@ -21,6 +22,7 @@ class User(SQLModel, table=True):
 
     # it populates the .user attribute on the Post Model
     posts: list["Post"] = Relationship(back_populates="user")
+    likes: list["Like"] = Relationship(back_populates="user")
 
 
 class UserResponseBase(BaseModel):

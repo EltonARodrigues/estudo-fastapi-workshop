@@ -7,10 +7,12 @@ from sqlmodel import Session, select
 from pamps.auth import AuthenticatedUser
 from pamps.db import ActiveSession
 from pamps.models.post import (
+    Like,
+    LikeCompleteResponde,
     Post,
     PostRequest,
     PostResponse,
-    PostResponseWithReplies,
+    PostResponseWithReplies
 )
 from pamps.models.user import User
 
@@ -32,6 +34,7 @@ async def get_post_by_post_id(
     post_id: int,
 ):
     """Get post by post_id"""
+
     query = select(Post).where(Post.id == post_id)
     post = session.exec(query).first()
     if not post:
@@ -71,3 +74,28 @@ async def create_post(
     session.commit()
     session.refresh(db_post)
     return db_post
+
+
+@router.post("/{post_id}/like/", response_model=LikeCompleteResponde, status_code=201)
+async def add_like_to_post(
+    *,
+    post_id: int,
+    session: Session = ActiveSession,
+    user: User = AuthenticatedUser
+):
+    """Add Like to a post"""
+
+    db_like = Like(user_id=user.id, post_id=post_id)
+    session.add(db_like)
+    session.commit()
+    session.refresh(db_like)
+    return db_like
+
+
+@router.get("/likes/{username}", response_model=list[PostResponse], status_code=200)
+async def get_posts_with_likes(*, username: int, session: Session = ActiveSession):
+    """Posts liked by user"""
+
+    query = select(Post).where(Post.id == Like.post_id).where(Like.user_id==username)
+    posts = session.exec(query).all()
+    return posts
