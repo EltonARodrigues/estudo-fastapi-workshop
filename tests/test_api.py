@@ -85,4 +85,4 @@ def test_all_posts_from_user1_with_replies(api_client):
     )
     assert response.status_code == 200
     results = response.json()
-    assert len(results) == 2
+    assert len(results) == 3
