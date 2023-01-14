@@ -1,0 +1,51 @@
+name: Run tests
+
+on:
+  push:
+
+env:
+  PAMPS_DB: pamps_test
+  PAMPS_DB__uri: "postgresql://postgres:postgres@127.0.0.1:5432/pamps_test"
+  PAMPS_DB__echo: false
+  PAMPS_DB__CONNECT_ARGS: "{}"
+  PAMPS_SECURITY__SECRET_KEY: ${{secrets.SECRET_KEY}}
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_DB: pamps_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          pip install -r requirements-dev.txt
+          pip install -e .
+
+      - name: apply db migrations
+        run: |
+          pamps reset-db -f
+          alembic stamp base
+          alembic upgrade head
+
+      - name: Run tests
+        run: pytest -v -l --tb=short --maxfail=1 tests/

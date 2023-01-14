@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from pamps.app import app
 from pamps.cli import create_user
 
-os.environ["PAMPS_DB__uri"] = "postgresql://postgres:postgres@db:5432/pamps_test"
+# os.environ["PAMPS_DB__uri"] = "postgresql://postgres:postgres@db:5432/pamps_test"
 
 
 @pytest.fixture(scope="function")
